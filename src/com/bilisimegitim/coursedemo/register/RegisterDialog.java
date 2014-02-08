@@ -166,6 +166,8 @@ public class RegisterDialog extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        
+        
         try {
             String tckn = jTextField3.getText().trim();
             boolean kayitBulundu = kayitKontrol(tckn);
@@ -216,7 +218,7 @@ public class RegisterDialog extends javax.swing.JDialog {
         return kayitBulundu;
     }
     
-    private int kaydet(){
+    private int kaydet() throws Exception{
         Connection con = null;
         int updateCount = -1;       
         try {
@@ -230,15 +232,15 @@ public class RegisterDialog extends javax.swing.JDialog {
             PreparedStatement pstmt = con.prepareStatement(insertSql);
             pstmt.setString(1, jTextField1.getText().trim());
             pstmt.setString(2, jTextField2.getText().trim());
-            pstmt.setString(3, jComboBox1.getSelectedItem().toString());
+            pstmt.setString(3, jComboBox1.getSelectedItem().toString().substring(0,1));
             pstmt.setDate(4, date);
             pstmt.setString(5, jTextField3.getText().trim());
             pstmt.setString(6, sifre);
             updateCount = pstmt.executeUpdate();
         } catch (ClassNotFoundException ex) {
-            Logger.getLogger(RegisterDialog.class.getName()).log(Level.SEVERE, null, ex);
+            throw new Exception("Hata oluştu");
         } catch (SQLException ex) {
-            Logger.getLogger(RegisterDialog.class.getName()).log(Level.SEVERE, null, ex);
+            throw new Exception("Hata oluştu");
         } finally{
             if(con != null){
                 try {
