@@ -3,11 +3,17 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package com.bilisimegitim.coursedemo.entrypoint;
 
 import com.bilisimegitim.coursedemo.main.MainForm;
 import com.bilisimegitim.coursedemo.register.RegisterDialog;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 
 /**
@@ -36,7 +42,7 @@ public class GirisForm extends javax.swing.JFrame {
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
-        jTextField1 = new javax.swing.JTextField();
+        jTcknField1 = new javax.swing.JTextField();
         jPasswordField1 = new javax.swing.JPasswordField();
         jButton1 = new javax.swing.JButton();
         jButton2 = new javax.swing.JButton();
@@ -46,7 +52,7 @@ public class GirisForm extends javax.swing.JFrame {
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/bilisimegitim/coursedemo/resource/person.png"))); // NOI18N
 
-        jLabel2.setText("User name :");
+        jLabel2.setText("TCKN : ");
 
         jLabel3.setText("Password : ");
 
@@ -81,9 +87,9 @@ public class GirisForm extends javax.swing.JFrame {
                                 .addComponent(jButton1)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jButton2))
-                            .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 132, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jTcknField1, javax.swing.GroupLayout.PREFERRED_SIZE, 132, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jPasswordField1, javax.swing.GroupLayout.PREFERRED_SIZE, 132, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(0, 119, Short.MAX_VALUE))
+                        .addGap(0, 121, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
                         .addContainerGap()
                         .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
@@ -97,7 +103,7 @@ public class GirisForm extends javax.swing.JFrame {
                 .addGap(28, 28, 28)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
-                    .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jTcknField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel3)
@@ -121,31 +127,55 @@ public class GirisForm extends javax.swing.JFrame {
         girisKontrol();
     }//GEN-LAST:event_jButton2ActionPerformed
 
-    private void girisKontrol(){
-        String userName = jTextField1.getText().trim();
+    private void girisKontrol() {
+
         String password = new String(jPasswordField1.getPassword());
-        if(userName.equals("")){
-            JOptionPane.showMessageDialog(this, "Lütfen kullanıcı adını boş bırakmayınız.");
+        String tckNo = jTcknField1.getText().trim();
+        
+        if(tckNo.equals("")){
+            JOptionPane.showMessageDialog(this, "Lütfen TC kimlik numaranızı boş bırakmayınız.");
             return;
         }
-        if(password.trim().equals("")){
+        if (password.trim().equals("")) {
             JOptionPane.showMessageDialog(this, "Lütfen şifreyi boş bırakmayınız.");
             return;
         }
-        if(!userName.equals("Adem")){
-            JOptionPane.showMessageDialog(this, "Kullanıcı adı yanlış");
-            return;
+
+        Connection con = null;
+        try {
+            String sqlStr = "select * from kullanici where tckn=? ";
+            Class.forName("com.mysql.jdbc.Driver");
+            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/murat?zeroDateTimeBehavior=convertToNull", "root", "");
+            PreparedStatement pstmt = con.prepareStatement(sqlStr);
+            pstmt.setString(1, jTcknField1.getText().trim());
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                String dbSifre=rs.getString("sifre");
+                if (!password.equals(dbSifre)) {
+                    JOptionPane.showMessageDialog(this, "Şifre yanlış");
+                    return;
+                }
+                if (password.equals(dbSifre)) {
+                    new MainForm().setVisible(true);
+                 }
+            }
+
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Sql hatası oluştu");
+        } catch (ClassNotFoundException ex) {
+            JOptionPane.showMessageDialog(this, "Driver bulunamadı");
+        } finally {
+            if (con != null) {
+                try {
+                    con.close();
+                } catch (SQLException ex) {
+                    Logger.getLogger(RegisterDialog.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
         }
-        if(!password.equals("55555")){
-            JOptionPane.showMessageDialog(this, "Şifre yanlış");
-            return;
-        }
-       
-        
-        new MainForm().setVisible(true); 
-        //String date = DateUtil.dateToStr(new Date(), "dd/MM/yyyy");
+
     }
-    
+
     /**
      * @param args the command line arguments
      */
@@ -188,6 +218,6 @@ public class GirisForm extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JPasswordField jPasswordField1;
-    private javax.swing.JTextField jTextField1;
+    private javax.swing.JTextField jTcknField1;
     // End of variables declaration//GEN-END:variables
 }

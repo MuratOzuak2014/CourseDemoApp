@@ -192,9 +192,9 @@ public class RegisterDialog extends javax.swing.JDialog {
         boolean kayitBulundu = false;
         Connection con = null;
         try {
+            String sqlStr = "select * from kullanici where tckn=? ";
             Class.forName("com.mysql.jdbc.Driver");
             con = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/adem?zeroDateTimeBehavior=convertToNull","root","");
-            String sqlStr = "select * from kullanici where tckn=? ";
             PreparedStatement pstmt = con.prepareStatement(sqlStr);
             pstmt.setString(1, tckn);
             ResultSet rs = pstmt.executeQuery();
@@ -237,6 +237,7 @@ public class RegisterDialog extends javax.swing.JDialog {
             pstmt.setString(5, jTextField3.getText().trim());
             pstmt.setString(6, sifre);
             updateCount = pstmt.executeUpdate();
+            
         } catch (ClassNotFoundException ex) {
             throw new Exception("Hata oluştu");
         } catch (SQLException ex) {
