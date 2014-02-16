@@ -6,7 +6,9 @@
 package com.bilisimegitim.coursedemo.main;
 
 import com.bilisimegitim.coursedemo.register.RegisterDialog;
+import com.bilisimegitim.coursedemo.util.CRMUtil;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -14,13 +16,16 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
-import javax.swing.JTextField;
+import javax.swing.table.DefaultTableModel;
+
 
 /**
  *
  * @author Adem
  */
 public class MainForm extends javax.swing.JFrame {
+
+    private int musteriId;
 
     /**
      * Creates new form MainForm
@@ -275,17 +280,21 @@ public class MainForm extends javax.swing.JFrame {
 
         jLabel14.setText("Konu :");
 
-        jTextField14.setText("jTextField14");
-
         jLabel15.setText("Detay :");
 
         jTextArea1.setColumns(20);
+        jTextArea1.setFont(new java.awt.Font("Tahoma", 0, 11)); // NOI18N
         jTextArea1.setRows(5);
         jScrollPane1.setViewportView(jTextArea1);
 
         jButton2.setText("Temizle");
 
         jButton3.setText("Kaydet");
+        jButton3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton3ActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
@@ -334,18 +343,17 @@ public class MainForm extends javax.swing.JFrame {
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
-                .addContainerGap()
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
+                .addGap(29, 29, 29)
                 .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
@@ -398,14 +406,15 @@ public class MainForm extends javax.swing.JFrame {
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         try {
-            String str = jTextField1.getText().trim();
-            sorgula(str);
+            sorgula();
+            arama_sorgula();
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(null, ex.getMessage());
         }
     }//GEN-LAST:event_jButton1ActionPerformed
 
-    private void sorgula(String tckn) throws Exception {
+    private void sorgula() throws Exception {
+        String tckn = jTextField1.getText().trim();
         Connection con = null;
         try {
             String sqlStr = "select a.*, b.* from musteri a, musteri_adres b "
@@ -417,11 +426,19 @@ public class MainForm extends javax.swing.JFrame {
             pstmt.setString(1, tckn);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
+                musteriId = rs.getInt("musteri_id");
                 jTextField2.setText(rs.getString("musteri_ad"));
                 jTextField3.setText(rs.getString("musteri_soyad"));
                 jTextField4.setText(rs.getString("cinsiyet"));
                 jDateChooser1.setDate(rs.getDate("dogum_tarihi"));
-
+                jTextField6.setText(rs.getString("telefon"));
+                jTextField7.setText(rs.getString("gsm"));
+                jTextField8.setText(rs.getString("adres_il"));
+                jTextField9.setText(rs.getString("adres_ilce"));
+                jTextField10.setText(rs.getString("adres_mah"));
+                jTextField11.setText(rs.getString("adres_cad"));
+                jTextField12.setText(rs.getString("adres_sok"));
+                jTextField13.setText(rs.getString("adres_no"));
             }
 
         } catch (SQLException ex) {
@@ -440,11 +457,160 @@ public class MainForm extends javax.swing.JFrame {
 
     }
 
+    private void arama_sorgula() throws Exception {
+        String tckn = jTextField1.getText().trim();
+        Connection con = null;
+        try {
+            String sqlStr = "select b.* from musteri a, musteri_arama b "
+                    + "where a.musteri_id=b.musteri_id "
+                    + "and a.tckn=? ";
+            Class.forName("com.mysql.jdbc.Driver");
+            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/murat?zeroDateTimeBehavior=convertToNull", "root", "");
+            PreparedStatement pstmt = con.prepareStatement(sqlStr);
+            pstmt.setString(1, tckn);
+            ResultSet rs = pstmt.executeQuery();
+            DefaultTableModel model = CRMUtil.convertToTableModel(rs);
+            jTable2.setModel(model);
+
+        } catch (SQLException ex) {
+            throw new Exception("Sql hatası oluştu");
+        } catch (ClassNotFoundException ex) {
+            throw new Exception("Driver bulunamadı");
+        } finally {
+            if (con != null) {
+                try {
+                    con.close();
+                } catch (SQLException ex) {
+                    Logger.getLogger(RegisterDialog.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+
+    }
+    
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-        // TODO add your handling code here:
+        try {
+            kaydet_musteri();
+            kaydet_adres();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(null, ex.getMessage());
+        }
 
 
     }//GEN-LAST:event_jButton4ActionPerformed
+
+    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+        try {
+            kaydet_arama();
+            arama_sorgula();
+        } catch (Exception ex) {
+            Logger.getLogger(MainForm.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }//GEN-LAST:event_jButton3ActionPerformed
+
+    private int kaydet_arama() throws Exception {
+        Connection con = null;
+        int updateCount = -1;
+        java.sql.Date date = new java.sql.Date(new java.util.Date().getTime());
+        try {
+            String updateSql3 = "insert into musteri_arama (musteri_id, tarih, konu, detay) values (?, ?, ?,?);";
+
+            Class.forName("com.mysql.jdbc.Driver");
+            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/murat?zeroDateTimeBehavior=convertToNull", "root", "");
+            PreparedStatement pstmt = con.prepareStatement(updateSql3);
+            pstmt.setInt(1, musteriId);
+            pstmt.setDate(2, date);
+            pstmt.setString(3, jTextField14.getText().trim());
+            pstmt.setString(4, jTextArea1.getText().trim());
+            updateCount = pstmt.executeUpdate();
+
+        } catch (ClassNotFoundException ex) {
+            throw new Exception("Hata oluştu");
+        } catch (SQLException ex) {
+            throw new Exception("Hata oluştu");
+        } finally {
+            if (con != null) {
+                try {
+                    con.close();
+                } catch (SQLException ex) {
+                    Logger.getLogger(RegisterDialog.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+        return updateCount;
+    }
+
+    private int kaydet_musteri() throws Exception {
+        Connection con = null;
+        int updateCount = -1;
+        try {
+            String updateSql = "update musteri set musteri_ad=?,musteri_soyad=?,cinsiyet=?,dogum_tarihi=?";
+            updateSql += " where tckn=?";
+
+            Class.forName("com.mysql.jdbc.Driver");
+            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/murat?zeroDateTimeBehavior=convertToNull", "root", "");
+            PreparedStatement pstmt = con.prepareStatement(updateSql);
+            pstmt.setString(1, jTextField2.getText().trim());
+            pstmt.setString(2, jTextField3.getText().trim());
+            pstmt.setString(3, jTextField4.getText().trim());
+            pstmt.setDate(4, new Date(jDateChooser1.getDate().getTime()));
+            pstmt.setString(5, jTextField1.getText().trim());
+
+            updateCount = pstmt.executeUpdate();
+
+        } catch (ClassNotFoundException ex) {
+            throw new Exception("Hata oluştu");
+        } catch (SQLException ex) {
+            throw new Exception("Hata oluştu");
+        } finally {
+            if (con != null) {
+                try {
+                    con.close();
+                } catch (SQLException ex) {
+                    Logger.getLogger(RegisterDialog.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+        return updateCount;
+    }
+
+    private int kaydet_adres() throws Exception {
+        Connection con = null;
+        int updateCount = -1;
+        try {
+            String updateSql2 = "update musteri_adres set telefon=?,gsm=?,adres_il=?,adres_ilce=?,";
+            updateSql2 += " adres_mah=?, adres_cad=?, adres_sok=?, adres_no=? where musteri_id=?";
+
+            Class.forName("com.mysql.jdbc.Driver");
+            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/murat?zeroDateTimeBehavior=convertToNull", "root", "");
+            PreparedStatement pstmt = con.prepareStatement(updateSql2);
+            pstmt.setString(1, jTextField6.getText().trim());
+            pstmt.setString(2, jTextField7.getText().trim());
+            pstmt.setString(3, jTextField8.getText().trim());
+            pstmt.setString(4, jTextField9.getText().trim());
+            pstmt.setString(5, jTextField10.getText().trim());
+            pstmt.setString(6, jTextField11.getText().trim());
+            pstmt.setString(7, jTextField12.getText().trim());
+            pstmt.setString(8, jTextField13.getText().trim());
+            pstmt.setInt(9, musteriId);
+            updateCount = pstmt.executeUpdate();
+
+        } catch (ClassNotFoundException ex) {
+            throw new Exception("Hata oluştu");
+        } catch (SQLException ex) {
+            throw new Exception("Hata oluştu");
+        } finally {
+            if (con != null) {
+                try {
+                    con.close();
+                } catch (SQLException ex) {
+                    Logger.getLogger(RegisterDialog.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+        return updateCount;
+    }
 
     private void openRegisterDialog() {
         RegisterDialog regDialog = new RegisterDialog(this, false);

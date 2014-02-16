@@ -13,13 +13,14 @@ insert into musteri_adres values (4, '0324-444 00 50', '0533-890 75 77', 'Gazian
  'Kozalı', 'MKA', 'Paşa', '14');
 
 create table musteri_arama(
+arama_id int auto_increment,
 musteri_id int not null,
 tarih date,
-gorusulen_kisi varchar(40),
-ozet varchar(40),
-durum varchar(40)
+konu varchar(40),
+detay varchar(40),
+primary key(arama_id)
 )engine=InnoDB default charset=utf8; /*türkçe karakterler */
-insert into musteri_arama values (4, '2014-02-05', 'Yılmaz Özdil', 'Sorun çözüldü',
+insert into musteri_arama (musteri_id, tarih, konu, detay) values (2, '2014-02-08', 'Sorun çözüldü',
  'memnun');
 
 create table musteri_talep(
